@@ -24,7 +24,7 @@ def update_db():
     fails = 0
     for x in get_bulk_data():
         excluded_cards = ["island", "plains", "forest", "swamp", "mountain"]
-        if (x["legalities"]["vintage"] == "legal" or x["border_color"] == "silver") and (not "token" in x["layout"] and (not (x["name"].lower() in excluded_cards))):
+        if (x["legalities"]["vintage"] != "not_legal" or x["border_color"] == "silver") and (not "token" in x["layout"] and (not (x["name"].lower() in excluded_cards))):
             try:
                 sql = ("INSERT OR REPLACE INTO Cards ("
                     "name,"
@@ -80,4 +80,3 @@ def get_list(query = None):
         for row in cursor:
             ret += str(row[0]) + "\n"
     return ret
-
