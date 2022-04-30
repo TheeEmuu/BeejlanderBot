@@ -8,24 +8,10 @@ import queries
 
 bot = commands.Bot(command_prefix='!beej ')
 
-# print("updating database")
-# database.update_db()
-# print("database updated")
-
 @bot.command()
-async def test(ctx):
-    response = database.get_list()
-    await ctx.author.send(response)
-
-@bot.command()
-async def hi(ctx):
-    message = "Whats up fucker"
-    await ctx.author.send(message)
-
-@bot.command()
-async def secret(ctx):
-    message = "This message will self destruct in 5 seconds"
-    await ctx.send(message, delete_after=5.0)
+async def list(ctx):
+    ret = database.get_beej_list()
+    await ctx.author.send(ret, delete_after=60.0)
 
 @bot.command()
 async def query(ctx):
@@ -33,6 +19,13 @@ async def query(ctx):
     query = queries.create_query(x)
     ret = database.get_list(query)
     await ctx.author.send(ret, delete_after=60.0)
+
+@bot.command()
+async def update(ctx):
+    if ctx.author.id == 80714818876608512:
+        print("updating database")
+        database.update_db()
+        print("database updated")
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")

@@ -13,7 +13,7 @@ def get_bulk_data():
     data = json.loads(r.text)
 
     for x in data["data"]:
-        if x["name"] == "Oracle Cards":
+        if x["name"] == "Default Cards":
             r = requests.get(x["download_uri"])
             ret = json.loads(r.text)
             return ret
@@ -21,18 +21,22 @@ def get_bulk_data():
 def update_db():
     conn = _connect()
 
+    conn.execute("DELETE FROM Cards")
+
     fails = 0
     for x in get_bulk_data():
         excluded_cards = ["island", "plains", "forest", "swamp", "mountain"]
-        if (x["legalities"]["vintage"] != "not_legal" or x["border_color"] == "silver") and (not "token" in x["layout"] and (not (x["name"].lower() in excluded_cards))):
+        excluded_set_types = ["alchemy", "masterpiece", "vanguard", "token", "memorabilia"]
+        if (x["legalities"]["vintage"] != "not_legal" or x["border_color"] == "silver") and (not "token" in x["layout"] and (not (x["name"].lower() in excluded_cards)) and not(x["set_type"].lower() in excluded_set_types)):
             try:
                 sql = ("INSERT OR REPLACE INTO Cards ("
                     "name,"
                     "isLegalStandard,"
+                    "isLegalPioneer,"
                     "isLegalModern,"
+                    "isLegalPauper,"
                     "isLegalPenny,"
                     "isLegalLegacy,"
-                    "expansion,"
                     "rarity,"
                     "priceUsd,"
                     "priceEur,"
@@ -41,10 +45,11 @@ def update_db():
                     " VALUES ("
                     '\"{name}\",'
                     '{isLegalStandard},'
+                    '{isLegalPioneer},'
                     '{isLegalModern},'
+                    '{isLegalPauper},'
                     '{isLegalPenny},'
                     '{isLegalLegacy},'
-                    '\"{expansion}\",'
                     '\"{rarity}\",'
                     '{priceUsd},'
                     '{priceEur},'
@@ -52,14 +57,15 @@ def update_db():
                 ).format(
                     name = x["name"].replace("\"", "\"\""),
                     isLegalStandard = x["legalities"]["standard"] == "legal",
+                    isLegalPioneer = x["legalities"]["pioneer"] == "legal",
                     isLegalModern = x["legalities"]["modern"] == "legal",
+                    isLegalPauper = x["legalities"]["pauper"] == "legal",
                     isLegalPenny = x["legalities"]["penny"] == "legal",
                     isLegalLegacy = x["legalities"]["legacy"] == "legal",
-                    expansion = x["set"],
                     rarity = x["rarity"],
-                    priceUsd = x["prices"]["usd"] or -1,
-                    priceEur = x["prices"]["eur"] or -1,
-                    priceTix = x["prices"]["tix"] or -1,
+                    priceUsd = x["prices"]["usd"] or "NULL",
+                    priceEur = x["prices"]["eur"] or "NULL",
+                    priceTix = x["prices"]["tix"] or "NULL",
                 )
                 conn.execute(sql)
             except:
@@ -72,11 +78,16 @@ def get_list(query = None):
     conn = _connect()
     ret = ""
     if query is None:
-        sql = "SELECT name FROM Cards ORDER BY RANDOM() LIMIT 1"
+        sql = "SELECT name FROM Cards GROUP BY name ORDER BY RANDOM() LIMIT 1"
     else:
-        sql = "SELECT name FROM Cards WHERE (" + query + ") ORDER BY RANDOM() LIMIT 1"
+        sql = "SELECT name FROM Cards WHERE (" + query + ") GROUP BY name ORDER BY RANDOM() LIMIT 1"
     for i in range (100):
         cursor = conn.execute(sql)
         for row in cursor:
             ret += str(row[0]) + "\n"
     return ret
+
+def get_beej_list():
+    conn = _connect()
+    ret = ""
+    

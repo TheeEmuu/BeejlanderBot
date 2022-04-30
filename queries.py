@@ -7,8 +7,6 @@ def create_query(query):
     for x in query_list:
         if x.startswith("format") or x.startswith("f"):
             q = _format_format(x)
-        if x.startswith("set") or x.startswith("s"):
-            q = _format_expansion(x)
         if x.startswith("usd"):
             q = _format_priceUsd(x)
         if x.startswith("eur"):
@@ -21,13 +19,9 @@ def create_query(query):
     return current_query[:-5]
 
 def _format_format(query):
+    
     x = list(filter(None, re.split(r"(plus|[=<>])", query)))
     x[0] = "format"
-    return ''.join(x)
-
-def _format_expansion(query):
-    x = list(filter(None, re.split(r"(plus|[=<>])", query)))
-    x[0] = "expansion"
     return ''.join(x)
 
 def _format_priceUsd(query):
